@@ -60,9 +60,7 @@ pub mod from_parts {
 
     use anyhow::Result;
     use pathfinder_common::class_definition::{
-        EntryPointType,
-        SelectorAndOffset,
-        SierraEntryPoints,
+        EntryPointType, SelectorAndOffset, SierraEntryPoints,
     };
     use pathfinder_common::ClassHash;
     use pathfinder_crypto::Felt;
@@ -224,7 +222,7 @@ fn compute_cairo_class_hash(
     fn add_extra_space_before_colon(v: &str) -> String {
         // This is required because if we receive an already correct ` : `, we will
         // still "repair" it to `  : ` which we then fix at the end.
-        v.replace(": ", " : ").replace("  :", " :")
+        v.replace(": ", " : ").replace("  :", "  :")
     }
 
     // Handle a backwards compatibility hack which is required if compiler_version
@@ -252,13 +250,17 @@ fn compute_cairo_class_hash(
             String::from_utf8_unchecked(string_buffer)
         };
 
+        // println!("this is the raw json output {:?}", raw_json_output);
+
         let mut keccak_writer = KeccakWriter::default();
         keccak_writer
             .write_all(raw_json_output.as_bytes())
             .expect("writing to KeccakWriter never fails");
 
         let KeccakWriter(hash) = keccak_writer;
-        truncated_keccak(<[u8; 32]>::from(hash.finalize()))
+        let x = hash.finalize();
+        println!("this goes inside keccak write {:?}", x);
+        truncated_keccak(<[u8; 32]>::from(x))
     };
 
     // what follows is defined over at the contract.cairo
@@ -272,6 +274,7 @@ fn compute_cairo_class_hash(
     // contract_state hash, we do include the number of items in this
     // class_hash.
     outer.update(API_VERSION);
+    println!("API_VERSION: {:?}", API_VERSION);
 
     // It is important to process the different entrypoint hashchains in correct
     // order. Each of the entrypoint lists gets updated into the `outer`
@@ -297,7 +300,11 @@ fn compute_cairo_class_hash(
                     hc
                 })
         })
-        .for_each(|x| outer.update(x.finalize()));
+        .for_each(|x| {
+            let ep_hash = x.finalize();
+            outer.update(ep_hash);
+            println!("Entry point hashchain: {:?}", ep_hash);
+        });
 
     fn update_hash_chain(mut hc: HashChain, next: Result<Felt, Error>) -> Result<HashChain, Error> {
         hc.update(next?);
@@ -316,9 +323,12 @@ fn compute_cairo_class_hash(
         .try_fold(HashChain::default(), update_hash_chain)
         .context("Failed to process contract_definition.program.builtins")?;
 
-    outer.update(builtins.finalize());
+    let builtins_hash = builtins.finalize();
+    println!("Builtins hashchain: {:?}", builtins_hash);
+    outer.update(builtins_hash);
 
     outer.update(truncated_keccak);
+    println!("Truncated Keccak hash: {:?}", truncated_keccak);
 
     let bytecodes = contract_definition
         .program
@@ -331,7 +341,9 @@ fn compute_cairo_class_hash(
         .try_fold(HashChain::default(), update_hash_chain)
         .context("Failed to process contract_definition.program.data")?;
 
-    outer.update(bytecodes.finalize());
+    let bytecode_hash = bytecodes.finalize();
+    outer.update(bytecode_hash);
+    println!("Bytecodes hashchain: {:?}", bytecode_hash);
 
     Ok(ClassHash(outer.finalize()))
 }
@@ -501,9 +513,7 @@ mod json {
     use std::collections::{BTreeMap, HashMap};
 
     use pathfinder_common::class_definition::{
-        EntryPointType,
-        SelectorAndFunctionIndex,
-        SelectorAndOffset,
+        EntryPointType, SelectorAndFunctionIndex, SelectorAndOffset,
     };
 
     pub enum ContractDefinition<'a> {

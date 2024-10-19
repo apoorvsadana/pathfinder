@@ -21,6 +21,8 @@ pub async fn download_class<SequencerClient: GatewayApi>(
 ) -> Result<DownloadedClass, anyhow::Error> {
     use starknet_gateway_types::class_hash::compute_class_hash;
 
+    println!("this is fetch_casm_from_fgw : {:?}", fetch_casm_from_fgw);
+
     let definition = sequencer
         .pending_class_by_hash(class_hash)
         .await
@@ -35,6 +37,7 @@ pub async fn download_class<SequencerClient: GatewayApi>(
     })
     .await?;
     let hash = hash?;
+    println!("this is the hash {:?}", hash);
 
     use starknet_gateway_types::class_hash::ComputedClassHash;
     match hash {
