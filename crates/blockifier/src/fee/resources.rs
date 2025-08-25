@@ -10,10 +10,8 @@ use crate::execution::contract_class::TrackedResource;
 use crate::fee::eth_gas_constants;
 use crate::fee::fee_utils::get_vm_resources_cost;
 use crate::fee::gas_usage::{
-    get_consumed_message_to_l2_emissions_cost,
-    get_da_gas_cost,
-    get_log_message_to_l1_emissions_cost,
-    get_message_segment_length,
+    get_consumed_message_to_l2_emissions_cost, get_da_gas_cost,
+    get_log_message_to_l1_emissions_cost, get_message_segment_length,
     get_onchain_data_segment_length,
 };
 use crate::state::cached_state::{StateChanges, StateChangesCountForFee};
@@ -85,9 +83,10 @@ impl ComputationResources {
             self.n_reverted_steps,
             computation_mode,
         );
+        println!("computation mode: {:?}", computation_mode);
 
-        log::debug!("the vm cost is: {:?}", vm_cost);
-        log::debug!("the sierra gas as of now is: {:?}", self.sierra_gas);
+        println!("the vm cost is: {:?}", vm_cost);
+        println!("the sierra gas as of now is: {:?}", self.sierra_gas);
 
         let total_sierra_gas =
             self.sierra_gas.checked_add(self.reverted_sierra_gas).unwrap_or_else(|| {
@@ -97,7 +96,7 @@ impl ComputationResources {
                 )
             });
 
-        log::debug!("total sierra gas is: {:?}", total_sierra_gas);
+        println!("total sierra gas is: {:?}", total_sierra_gas);
         let sierra_gas_cost = match computation_mode {
             GasVectorComputationMode::All => GasVector::from_l2_gas(total_sierra_gas),
             GasVectorComputationMode::NoL2Gas => GasVector::from_l1_gas(
@@ -105,7 +104,7 @@ impl ComputationResources {
             ),
         };
 
-        log::debug!("sierra gas cost is: {:?}", sierra_gas_cost);
+        println!("sierra gas cost is: {:?}", sierra_gas_cost);
 
         vm_cost.checked_add(sierra_gas_cost).unwrap_or_else(|| {
             panic!(

@@ -3,7 +3,7 @@ use std::io;
 use std::path::Path;
 use std::sync::Arc;
 
-use apollo_config::dumping::{ser_param, SerializeConfig};
+use apollo_config::dumping::{SerializeConfig, ser_param};
 use apollo_config::{ParamPath, ParamPrivacyInput, SerializedParam};
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -18,7 +18,7 @@ use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::define_versioned_constants;
 use starknet_api::executable_transaction::TransactionType;
 use starknet_api::execution_resources::{GasAmount, GasVector};
-use starknet_api::transaction::fields::{hex_to_tip, GasVectorComputationMode, Tip};
+use starknet_api::transaction::fields::{GasVectorComputationMode, Tip, hex_to_tip};
 use strum::IntoEnumIterator;
 use thiserror::Error;
 
@@ -316,7 +316,8 @@ impl VersionedConstants {
     /// Converts L1 gas amount to Sierra (L2) gas amount with **upward rounding**.
     pub fn l1_gas_to_sierra_gas_amount_round_up(&self, l1_gas_amount: GasAmount) -> GasAmount {
         // The amount ratio is the inverse of the price ratio.
-        let amount = (*(self.sierra_gas_in_l1_gas_amount().inv() * l1_gas_amount.0).ceil().numer()).into();
+        let amount =
+            (*(self.sierra_gas_in_l1_gas_amount().inv() * l1_gas_amount.0).ceil().numer()).into();
         log::debug!("the amount in the l1_gas_to_sierra_gas_amount_round_up is: {:?}", amount);
         amount
     }
@@ -1011,6 +1012,10 @@ impl GasCosts {
             sha256_process_block: summarize(SyscallSelector::Sha256ProcessBlock),
         };
 
+        println!(
+            "these are builtin gas costs: {:?} {:?}",
+            base_costs, os_constants.builtin_gas_costs
+        );
         Self { syscalls, base: base_costs, builtins: os_constants.builtin_gas_costs }
     }
 

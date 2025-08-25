@@ -1,11 +1,7 @@
 use std::collections::HashMap;
 
 use cairo_vm::serde::deserialize_program::{
-    deserialize_array_of_bigint_hex,
-    Attribute,
-    HintParams,
-    Identifier,
-    ReferenceManager,
+    Attribute, HintParams, Identifier, ReferenceManager, deserialize_array_of_bigint_hex,
 };
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::errors::program_errors::ProgramError;
@@ -24,22 +20,16 @@ use starknet_types_core::felt::Felt;
 use crate::execution::call_info::{CallExecution, CallInfo, Retdata};
 use crate::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use crate::execution::entry_point::{
-    execute_constructor_entry_point,
-    ConstructorContext,
-    ConstructorEntryPointExecutionResult,
-    EntryPointExecutionContext,
-    EntryPointExecutionResult,
-    ExecutableCallEntryPoint,
+    ConstructorContext, ConstructorEntryPointExecutionResult, EntryPointExecutionContext,
+    EntryPointExecutionResult, ExecutableCallEntryPoint, execute_constructor_entry_point,
 };
 use crate::execution::errors::{
-    ConstructorEntryPointExecutionError,
-    EntryPointExecutionError,
-    PostExecutionError,
+    ConstructorEntryPointExecutionError, EntryPointExecutionError, PostExecutionError,
     PreExecutionError,
 };
 #[cfg(feature = "cairo_native")]
 use crate::execution::native::entry_point_execution as native_entry_point_execution;
-use crate::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
+use crate::execution::stack_trace::{Cairo1RevertHeader, extract_trailing_cairo1_revert_trace};
 use crate::execution::syscalls::hint_processor::{ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
 use crate::execution::{deprecated_entry_point_execution, entry_point_execution};
 use crate::state::errors::StateError;
@@ -83,6 +73,7 @@ pub fn execute_entry_point_call_wrapper(
                 });
             }
             update_remaining_gas(remaining_gas, &call_info);
+            println!("[APOORV] gas after running execute tx is: {:?}", remaining_gas);
             Ok(call_info)
         }
         Err(EntryPointExecutionError::PreExecutionError(err))
